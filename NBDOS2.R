@@ -1,62 +1,5 @@
 
-
-memory.limit(size = 56000)
-options(scipen=10000)
-
-
-
-## Auxiliary functions for SMOM
-NBDOS <- function(Sc, k, ScNk, rTh, nTh){
-  Nc <- ncol(Sc)-2
-  sfSc <- NULL
-  Hck <- NULL
-  Sc$Cl <- 0
-  ij = 0
-  for (i in 1:nrow(Sc)) {
-    Tem <- ScNk[i,ScNk[i,] %in% Sc$id]
-    if(round(length(Tem)/k,3) >= rTh){
-      ij = ij + 1
-      sfSc <- rbind.data.frame(sfSc, Sc[i,])
-      Hck[ij] <- list(Tem)
-    }
-  }
-  for (ii in 1:nrow(sfSc)) {
-    Tem <- get.knnx(Sc[,1:Nc], sfSc[ii,1:Nc], k=k2+1)
-    Hck[[ii]] <- union(apply(Hck[[ii]],2,FUN=function(x)(x)), intersect(setdiff(Sc$id[Tem$nn.index],sfSc$id[ii]), sfSc$id))
-  }
-  curld <- 0
-  for (iii in 1:nrow(sfSc)) {
-    if(sfSc$Cl[iii]==0){
-      curld <- curld + 1
-      xi <- sfSc[iii,]
-      xi$xj <- iii
-      xi$Cl <- curld
-      sfC <- xi
-      Sc$Cl[Sc$id == iii] <- curld
-      while(nrow(sfC)!=0){
-        xj <- sfC[1,]
-        for (l in 1:length(Hck[[xj$xj]])) {
-          xl <- Sc[Sc$id == Hck[[xj$xj]][l],]
-          if(xl$Cl==0){
-            xl$Cl <- curld
-            Sc$Cl[Sc$id == Hck[[xj$xj]][l]] <- curld
-            if(xl$id %in% sfSc$id){
-              xl$xj <- which(sfSc$id==xl$id)
-              sfC <- rbind.data.frame(sfC, xl)
-            }
-          }
-        }
-        sfC <- sfC[-1,]
-      }
-    }
-  }
-  for (cr in 1:curld) {
-    if(nrow(Sc[Sc$Cl==cr,]) < nTh){Sc$Cl[Sc$Cl==cr] <- 0}
-  }
-  return(Sc)
-}
-
-# --- 
+## Auxiliary functions for NBDOS
 
 NBDOS2 <- function(D, c, k1, k2, rTh, nTh){
   
@@ -113,6 +56,7 @@ ScT <- ScCl[ScCl$Cl == 0,] # trapped instances
 return(rbind(ScO,ScT))
 
 }
+
 
 
 
